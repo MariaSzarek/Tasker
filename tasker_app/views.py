@@ -5,7 +5,6 @@ from .models import Task_todo
 from rest_framework import authentication, permissions
 
 
-
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
