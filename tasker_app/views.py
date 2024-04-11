@@ -51,7 +51,6 @@ def test_token(request):
     return Response("passed!")
 
 
-
 class Task_todoListView(generics.ListCreateAPIView):
     serializer_class = Task_todoSerializer
     authentication_classes = [
