@@ -52,15 +52,12 @@ def test_token(request):
 
 
 
-
-
 class Task_todoListView(generics.ListCreateAPIView):
     serializer_class = Task_todoSerializer
     authentication_classes = [
         authentication.SessionAuthentication,
         authentication.TokenAuthentication
         ]
-
     permission_classes = [permissions.IsAuthenticated]
 
     #http://127.0.0.1:8000/tasker/?owner=3
@@ -71,6 +68,7 @@ class Task_todoListView(generics.ListCreateAPIView):
             queryset = queryset.filter(owner=owner)
         return queryset
 
+#http://127.0.0.1:8000/tasker/4/
 class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task_todo.objects.all()
     serializer_class = Task_todoSerializer
