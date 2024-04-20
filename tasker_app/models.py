@@ -8,6 +8,8 @@ class CustomUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     username = None
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -29,6 +31,7 @@ class Task_todo(models.Model):
     description = models.CharField(max_length=250)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='owner_tasks', default='')
+
     #area =
     #category =
     #priority =
