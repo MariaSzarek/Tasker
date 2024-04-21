@@ -33,7 +33,7 @@ def signup(request):
         token = Token.objects.create(user=user)
         # pobiera dany link
         current_site = get_current_site(request).domain
-        relativeLink = reverse('email-verify')
+        relativeLink = reverse('activation-confirmed')
         absurl = 'http://' + current_site + relativeLink + "?token="+token.key
         email_body = "Witaj " + user.name.capitalize() + ",\nDziękujemy za rejestrację w Taskerze!\nKliknij w poniższy link, aby potwierdzić swój adres e-mail i dokończyć proces rejestracji:\n" + absurl + "\nJeśli nie rejestrowałeś/-aś się w Taskerze, prosimy o zignorowanie tej wiadomości.\nDziękujemy,\nZespół Tasker"
         data = {'to_email':user.email, 'email_body':email_body, 'email_subject': 'Witaj w Taskerze'}

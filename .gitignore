@@ -1,5 +1,4 @@
 env/
 
-moje_notatki.txt
-user.txt
-notatki.docx
+*.pyc
+__pycache__/
