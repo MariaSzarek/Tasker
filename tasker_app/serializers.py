@@ -5,7 +5,12 @@ from .models import Task_todo, CustomUser
 class UserSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = CustomUser
-        fields = ['id', 'name', 'password', 'email']
+        fields = ['id', 'name','last_name', 'password', 'email']
+
+
+
+
+
 
 class Task_todoSerializer(serializers.ModelSerializer):
     class Meta:

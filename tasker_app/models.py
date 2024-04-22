@@ -5,11 +5,13 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     username = None
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    last_active = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -31,11 +33,6 @@ class Task_todo(models.Model):
     description = models.CharField(max_length=250)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='owner_tasks', default='')
-
-    #area =
-    #category =
-    #priority =
-    #ddl =
 
     def __str__(self):
         return f"{self.title} -{self.status}"

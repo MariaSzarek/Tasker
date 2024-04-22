@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'tasker_app',
     'rest_framework.authtoken',
     'corsheaders',
+    'rest_framework_swagger',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,7 @@ ROOT_URLCONF = 'tasker_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -140,3 +141,4 @@ EMAIL_HOST_USER = "twojtasker@gmail.com"
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_TIMEOUT = 300
 DEFAULT_FROM_EMAIL = 'Tasker <twojtasker@gmail.com>'
+

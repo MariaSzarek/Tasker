@@ -1,27 +1,20 @@
-from django.conf import settings
-from django.shortcuts import render
 from rest_framework import generics
 from .serializers import Task_todoSerializer
-from .models import Task_todo
+from .models import Task_todo, CustomUser
 from rest_framework import authentication, permissions
 
-#login/signup/test_token
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
 from django.shortcuts import get_object_or_404
-from .models import CustomUser
 from rest_framework.authtoken.models import Token
 
 from .serializers import UserSerializer
-
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
-from django.conf import settings
+
 @api_view(['POST'])
 def signup(request):
     serializer = UserSerializer(data=request.data)
@@ -31,7 +24,6 @@ def signup(request):
         user.set_password(request.data['password'])
         user.save()
         token = Token.objects.create(user=user)
-        # pobiera dany link
         current_site = get_current_site(request).domain
         relativeLink = reverse('activation-confirmed')
         absurl = 'http://' + current_site + relativeLink + "?token="+token.key
@@ -43,19 +35,19 @@ def signup(request):
 
 
 class VerifyEmail(generics.GenericAPIView):
+    serializer_class = UserSerializer
     def get(self, request):
         token = request.GET.get('token')
         try:
             token_obj = Token.objects.get(key=token)
             user = token_obj.user
-
             if not user.is_verified:
                 user.is_verified = True
                 user.save()
-            return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
+            serializer = UserSerializer(user)
+            return Response({'token': token_obj.key, 'user': serializer.data}, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['POST'])
 def login(request):
@@ -71,13 +63,6 @@ def logout(request):
     token = Token.objects.get(user=request.user)
     token.delete()
     return Response("Logged out successfully")
-
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def test_token(request):
-    return Response("passed!")
-
 
 class Task_todoListView(generics.ListCreateAPIView):
     serializer_class = Task_todoSerializer
