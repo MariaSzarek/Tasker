@@ -10,14 +10,14 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 
-from .serializers import UserSerializer
+from .serializers import UserSerializer, RegisterSerializer
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 
 @api_view(['POST'])
 def signup(request):
-    serializer = UserSerializer(data=request.data)
+    serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         user = CustomUser.objects.get(email=request.data['email'])
