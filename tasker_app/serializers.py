@@ -8,12 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'name','last_name', 'password', 'email']
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        max_length=16, min_length=6, write_only=True)
+    password = serializers.CharField(write_only=True)
 
     default_error_messages = {
         'name_requirements': 'The name should only contain alphanumeric characters',
-        'password_requirements' : 'Password must contain at least one digit and one special character'
+        'password_req_char' : 'Password must contain at least one digit and one special character',
+        'password_req_length': 'Password must have a minimum of 6 characters and a maximum of 16'
     }
 
     class Meta:
@@ -22,15 +22,18 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         email = attrs.get('email', '')
-        username = attrs.get('name', '')
+        name = attrs.get('name', '')
         password = attrs.get('password', '')
 
-        if not username.isalnum():
+        if not any(char.isalpha() for char in name):
             raise serializers.ValidationError(
                 self.default_error_messages['name_requirements'])
 
-        if not re.search(r'\d', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            raise serializers.ValidationError(self.default_error_messages['password_requirements'])
+        if not re.search(r'\d', password) or not re.search(r'[!@#$%^&*_+=|/?~`\'".,<>()\[\]\{\}:;]', password):
+            raise serializers.ValidationError(self.default_error_messages['password_req_char'])
+
+        if len(password) > 16 or len(password) < 6:
+            raise serializers.ValidationError(self.default_error_messages['password_req_length'])
 
         return attrs
 

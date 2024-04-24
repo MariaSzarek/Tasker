@@ -4,14 +4,16 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255, blank=True)
-    email = models.EmailField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, blank=False, null=False)
+    last_name = models.CharField(max_length=255, blank=False, null=False)
+    email = models.EmailField(max_length=16, unique=True)
     password = models.CharField(max_length=255)
     username = None
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(blank=True, null=True)
+
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -20,6 +22,9 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    def tokens(self):
+        return ''
 
 class Task_todo(models.Model):
     STATUS_CHOICES = [

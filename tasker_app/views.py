@@ -14,6 +14,7 @@ from .serializers import UserSerializer, RegisterSerializer
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
+from django.utils import timezone
 
 @api_view(['POST'])
 def signup(request):
@@ -54,6 +55,8 @@ def login(request):
     user = get_object_or_404(CustomUser, email=request.data['email'])
     if not user.check_password(request.data['password']):
         return Response("missing user", status=status.HTTP_404_NOT_FOUND)
+    user.last_active = timezone.now()
+    user.save()
     token, created = Token.objects.get_or_create(user=user)
     serializer = UserSerializer(user)
     return Response({'token': token.key, 'user': serializer.data})

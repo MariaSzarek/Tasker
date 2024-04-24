@@ -10,9 +10,9 @@ urlpatterns = [
     path('api_schema/', get_schema_view(title='API Schema', description='Guide for the REST API'), name='api_schema'),
     path('docs/', TemplateView.as_view(template_name='docs.html', extra_context={'schema_url': 'api_schema'}), name='swagger-ui'),
     path('signup/', signup),
+    path('signup/activation-confirmed/', VerifyEmail.as_view(), name='activation-confirmed'),
     path('login/', login),
     path('logout/', logout),
     path('tasker/', Task_todoListView.as_view()),
-    path('tasker/<int:pk>/', Task_todoItemView.as_view()),
-    path('activation-confirmed/', VerifyEmail.as_view(), name='activation-confirmed')
+    path('tasker/<int:pk>/', Task_todoItemView.as_view())
     ]
