@@ -23,8 +23,6 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
-    def tokens(self):
-        return ''
 
 class Task_todo(models.Model):
     STATUS_CHOICES = [
