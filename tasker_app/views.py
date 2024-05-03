@@ -120,10 +120,7 @@ def logout(request):
 
 class Task_todoListView(generics.ListCreateAPIView):
     serializer_class = Task_todoSerializer
-    authentication_classes = [
-        authentication.SessionAuthentication,
-        authentication.TokenAuthentication
-        ]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     # http://127.0.0.1:8000/task_todo/?owner=8
