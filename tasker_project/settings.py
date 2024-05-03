@@ -154,3 +154,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',)
 }
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
