@@ -1,7 +1,7 @@
 from django.db import models
 from .menagers import UserManager
 from django.contrib.auth.models import AbstractUser
-
+from django.conf import settings
 
 class CustomUser(AbstractUser):
     name = models.CharField(max_length=255, blank=False, null=False)
@@ -23,19 +23,30 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
+class VerifyEmailToken(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='verification_token')
+    token = models.CharField(max_length=32, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+
 
 class Task_todo(models.Model):
-    STATUS_CHOICES = [
-        ('NEW', 'New'),
-        ('ABANDONED', 'Abandoned'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('DONE', 'Done'),
-    ]
 
-    title = models.CharField(max_length=50)
-    description = models.CharField(max_length=250)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='owner_tasks', default='')
+   AREA_CHOICES = [
+       (1, 'Mieszkanie'),
+       (2, 'Ogród'),
+   ]
 
-    def __str__(self):
-        return f"{self.title} -{self.status}"
+   SUBCATEGORY = [
+       (1, 'Sypialnia'),
+       (2, 'Łazienka'),
+   ]
+
+   title = models.CharField(max_length=50)
+   description = models.CharField(max_length=250)
+   owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='owner_tasks', default='')
+   area = models.PositiveSmallIntegerField(choices=AREA_CHOICES, default=1, null=True, blank=True)
+   subcategory = models.PositiveSmallIntegerField(choices=SUBCATEGORY, default=1, null=True, blank=True)
+   def __str__(self):
+       return f"{self.title} -{self.owner}"

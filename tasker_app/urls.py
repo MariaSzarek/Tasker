@@ -16,6 +16,6 @@ urlpatterns = [
     path('signup/activation-confirmed/', VerifyEmail.as_view(), name='activation-confirmed'),
     path('login/', login),
     path('logout/', logout),
-    path('tasker/', Task_todoListView.as_view()),
-    path('tasker/<int:pk>/', Task_todoItemView.as_view())
+    path('task_todo/', Task_todoListView.as_view()),
+    path('task_todo/<int:pk>/', Task_todoItemView.as_view())
     ]

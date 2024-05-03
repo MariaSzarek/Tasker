@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .serializers import Task_todoSerializer
-from .models import Task_todo, CustomUser
+from .models import Task_todo, CustomUser, VerifyEmailToken
 from rest_framework import authentication, permissions
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -23,13 +23,18 @@ import secrets
 import string
 from django.core.cache import cache
 from django.utils import timezone
+from datetime import timedelta
 
-def generate_random_token(length=32):
+
+def create_verification_token(user):
     alphabet = string.ascii_letters + string.digits
-    token = ''.join(secrets.choice(alphabet) for i in range(length))
+    token = ''.join(secrets.choice(alphabet) for i in range(32))
+    VerifyEmailToken.objects.create(
+        user=user,
+        token=token,
+        expires_at=timezone.now() + timedelta(minutes=5)
+    )
     return token
-
-
 
 @api_view(['POST'])
 def signup(request):
@@ -40,9 +45,9 @@ def signup(request):
         user.set_password(request.data['password'])
         user.save()
         # token = RefreshToken.for_user(user)
-        token = generate_random_token()
+        token = create_verification_token(user)
 
-        cache.set(f'verification_token_{token}', user.id, timeout=300)
+        # cache.set(f'verification_token_{token}', token, timeout=300)
         current_site = get_current_site(request).domain
         relativeLink = reverse('activation-confirmed')
         # absurl = 'http://' + current_site + relativeLink + "?token="+str(token.access_token)
@@ -60,27 +65,23 @@ class VerifyEmail(generics.GenericAPIView):
 
     def get(self, request):
         token = request.GET.get('token')
-        cache_token = cache.get(f'verification_token_{token}')
-
-        if cache_token is not None:
-            if isinstance(cache_token, dict):
-                user_id = cache_token.get('user_id')
-            else:
-                user_id = cache_token
-
-            if isinstance(user_id, int):
-                user = CustomUser.objects.get(id=user_id)
-
-                if user and not user.is_verified:
-                    if token == cache_token:
-                        user.is_verified = True
-                        user.save()
-                        serializer = UserSerializer(user)
-                        cache.delete(f'verification_token_{token}')
-                    # return Response({'token': cache_token, 'user': serializer.data}, status=status.HTTP_200_OK)
-                    return Response(status=status.HTTP_200_OK)
-        else:
+        try:
+            verify_email_token = VerifyEmailToken.objects.get(token=token)
+        except VerifyEmailToken.DoesNotExist:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if verify_email_token.expires_at < timezone.now():
+            return Response({'error': 'Token expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = verify_email_token.user
+
+        if not user.is_verified:
+            user.is_verified = True
+            user.save()
+            verify_email_token.delete()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'User already verified'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def login(request):
@@ -125,7 +126,7 @@ class Task_todoListView(generics.ListCreateAPIView):
         ]
     permission_classes = [permissions.IsAuthenticated]
 
-    #http://127.0.0.1:8000/tasker/?owner=3
+    # http://127.0.0.1:8000/task_todo/?owner=8
     def get_queryset(self):
         queryset = Task_todo.objects.all()
         owner = self.request.query_params.get('owner')
@@ -133,7 +134,7 @@ class Task_todoListView(generics.ListCreateAPIView):
             queryset = queryset.filter(owner=owner)
         return queryset
 
-#http://127.0.0.1:8000/tasker/4/
+#http://127.0.0.1:8000/task_todo/1
 class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task_todo.objects.all()
     serializer_class = Task_todoSerializer

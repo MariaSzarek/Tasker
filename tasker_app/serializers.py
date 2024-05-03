@@ -18,14 +18,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'name', 'password']
+        fields = ['email', 'name', 'last_name', 'password']
 
     def validate(self, attrs):
         email = attrs.get('email', '')
         name = attrs.get('name', '')
+        last_name = attrs.get('last_name', '')
         password = attrs.get('password', '')
 
-        if not any(char.isalpha() for char in name):
+        if not name.isalpha() and not last_name.isalpha():
             raise serializers.ValidationError(
                 self.default_error_messages['name_requirements'])
 
@@ -41,11 +42,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return CustomUser.objects.create_user(**validated_data)
 
 
-
-
-
 class Task_todoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task_todo
-        fields = ('id', 'title', 'description', 'status', 'owner')
+        fields = ['title', 'description', 'owner', 'area', 'subcategory']
 
