@@ -47,3 +47,7 @@ class Task_todoSerializer(serializers.ModelSerializer):
         model = Task_todo
         fields = ['title', 'description', 'owner', 'area', 'subcategory']
 
+class Short_Task_todoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task_todo
+        fields = ['title', 'owner']

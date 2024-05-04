@@ -49,4 +49,4 @@ class Task_todo(models.Model):
    area = models.PositiveSmallIntegerField(choices=AREA_CHOICES, default=1, null=True, blank=True)
    subcategory = models.PositiveSmallIntegerField(choices=SUBCATEGORY, default=1, null=True, blank=True)
    def __str__(self):
-       return f"{self.title} -{self.owner}"
+       return f"{self.id} {self.title} -{self.owner}"

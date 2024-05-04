@@ -1,5 +1,4 @@
 from rest_framework import generics
-from .serializers import Task_todoSerializer
 from .models import Task_todo, CustomUser, VerifyEmailToken
 from rest_framework import authentication, permissions
 
@@ -10,7 +9,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer, Task_todoSerializer, Short_Task_todoSerializer
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -25,6 +24,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from datetime import timedelta
 
+from rest_framework.exceptions import ValidationError
 
 def create_verification_token(user):
     alphabet = string.ascii_letters + string.digits
@@ -118,20 +118,68 @@ def logout(request):
         return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Task_todoListView(generics.ListCreateAPIView):
+class Full_Task_todoListView(generics.DestroyAPIView):
+    serializer_class = Task_todoSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Task_todo.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Task_todo.objects.filter(owner=user)
+        return queryset
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        deleted_title = instance.title
+        instance.delete()
+        print(f"Deleted task {deleted_title}")
+        return Response({"message": f"Task {deleted_title} deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+class Short_Task_todoListView(generics.ListCreateAPIView):
+    # pokaze title ,owner
+    serializer_class = Short_Task_todoSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Task_todo.objects.all()
+
+    # get , lita title, owner przy refresh i access token
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Task_todo.objects.filter(owner=user)
+        return queryset
+
+    def perform_create(self, serializer):
+        full_serializer = Task_todoSerializer(data=self.request.data)
+        """
+        nie moze być serilaizer Short_Task_todoSerializer bo bez description przyjmie a to blad
+        full_serializer = Short_Task_todoSerializer(data=self.request.data)
+        reszta pol ustawiona defoultowo
+        
+        """
+        if full_serializer.is_valid():
+            full_serializer.save(owner=self.request.user)
+        else:
+            raise ValidationError(full_serializer.errors)
+
+#http://127.0.0.1:8000/task_todo/1
+class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = Task_todoSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    # http://127.0.0.1:8000/task_todo/?owner=8
     def get_queryset(self):
-        queryset = Task_todo.objects.all()
-        owner = self.request.query_params.get('owner')
-        if owner is not None:
-            queryset = queryset.filter(owner=owner)
+        user = self.request.user
+        queryset = Task_todo.objects.filter(owner=user)
         return queryset
 
-#http://127.0.0.1:8000/task_todo/1
-class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Task_todo.objects.all()
-    serializer_class = Task_todoSerializer
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
