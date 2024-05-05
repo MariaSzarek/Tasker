@@ -17,6 +17,6 @@ urlpatterns = [
     path('login/', login),
     path('logout/', logout),
     path('task_todo/', Full_Task_todoListView.as_view(), name='task_todo'),
-    path('task_todo/<int:pk>/', Full_Task_todoListView.as_view(), name='task_todo_detail'),
+    path('task_todo/<int:pk>/', Task_todoItemView.as_view(), name='task_todo_detail'),
     path('short_task_todo/', Short_Task_todoListView.as_view(), name='short_task_todo')
     ]

@@ -88,17 +88,17 @@ def login(request):
     email = request.data['email']
     password = request.data['password']
     user = get_object_or_404(CustomUser, email=email)
+    if not user.is_verified:
+        return Response("Your account is not verified. Please check your email.", status=status.HTTP_401_UNAUTHORIZED)
     if not user.check_password(password):
         return Response("Invalid credentials", status=status.HTTP_401_UNAUTHORIZED)
     user.last_active = timezone.now()
     user.save()
     access_token = AccessToken.for_user(user)
     refresh_token = RefreshToken.for_user(user)
-    serializer = UserSerializer(user)
     return Response({
         'access_token': str(access_token),
         'refresh_token': str(refresh_token),
-#        'user': serializer.data
     }, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
@@ -118,8 +118,28 @@ def logout(request):
         return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Full_Task_todoListView(generics.DestroyAPIView):
+class Full_Task_todoListView(generics.ListCreateAPIView):
     serializer_class = Task_todoSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Task_todo.objects.all()
+        user = self.request.user
+        queryset = Task_todo.objects.filter(owner=user)
+        return queryset
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+
+class Short_Task_todoListView(generics.ListCreateAPIView):
+    """
+    skrócona lista tasków (widoczne tylko title + owner)
+    perform_create -> serializer Task_todoSerializer a nie Short_Task_todoSerializer,
+    bo Short przyjmie taska bez description a to bład, reszta pol ustawiona defoultowo
+    """
+    serializer_class = Short_Task_todoSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     queryset = Task_todo.objects.all()
@@ -129,6 +149,23 @@ class Full_Task_todoListView(generics.DestroyAPIView):
         queryset = Task_todo.objects.filter(owner=user)
         return queryset
 
+    def perform_create(self, serializer):
+        full_serializer = Task_todoSerializer(data=self.request.data)
+        if full_serializer.is_valid():
+            full_serializer.save(owner=self.request.user)
+        else:
+            raise ValidationError(full_serializer.errors)
+
+
+class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = Task_todoSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Task_todo.objects.filter(owner=user)
+        return queryset
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
@@ -139,47 +176,4 @@ class Full_Task_todoListView(generics.DestroyAPIView):
         instance = self.get_object()
         deleted_title = instance.title
         instance.delete()
-        print(f"Deleted task {deleted_title}")
         return Response({"message": f"Task {deleted_title} deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-class Short_Task_todoListView(generics.ListCreateAPIView):
-    # pokaze title ,owner
-    serializer_class = Short_Task_todoSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Task_todo.objects.all()
-
-    # get , lita title, owner przy refresh i access token
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Task_todo.objects.filter(owner=user)
-        return queryset
-
-    def perform_create(self, serializer):
-        full_serializer = Task_todoSerializer(data=self.request.data)
-        """
-        nie moze być serilaizer Short_Task_todoSerializer bo bez description przyjmie a to blad
-        full_serializer = Short_Task_todoSerializer(data=self.request.data)
-        reszta pol ustawiona defoultowo
-        
-        """
-        if full_serializer.is_valid():
-            full_serializer.save(owner=self.request.user)
-        else:
-            raise ValidationError(full_serializer.errors)
-
-#http://127.0.0.1:8000/task_todo/1
-class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = Task_todoSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Task_todo.objects.filter(owner=user)
-        return queryset
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
