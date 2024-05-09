@@ -45,20 +45,20 @@ To run this application locally, follow these steps:
    ```
 
 #### Running the Application
-To initialize the database and create migrations for your models, follow these steps:
+Execute these steps to start the application, ensuring that the database is updated and any necessary migrations are applied
 1. Make migrations: generate migration files based on changes to models:
 
    ```bash
    python manage.py makemigrations
    ```
 
-2. Apply migrations: execute the migrations and update the database schema accordingly:
+2. Apply migrations: execute the migrations and create or update the database schema accordingly:
 
    ```bash
    python manage.py migrate
    ```
 
-3. Create superuser:
+3. Create superuser (execute after initially creating the database, skip this when updating the database):
 
    ```bash
    python manage.py createsuperuser

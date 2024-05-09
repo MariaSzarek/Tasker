@@ -14,7 +14,6 @@ class CustomUser(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(blank=True, null=True)
 
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -28,7 +27,6 @@ class VerifyEmailToken(models.Model):
     token = models.CharField(max_length=32, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
-
 
 
 class Task_todo(models.Model):
@@ -48,5 +46,6 @@ class Task_todo(models.Model):
    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='owner_tasks', default='')
    area = models.PositiveSmallIntegerField(choices=AREA_CHOICES, default=1, null=True, blank=True)
    subcategory = models.PositiveSmallIntegerField(choices=SUBCATEGORY, default=1, null=True, blank=True)
+
    def __str__(self):
        return f"{self.id} {self.title} -{self.owner}"

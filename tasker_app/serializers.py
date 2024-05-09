@@ -16,6 +16,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         'password_req_length': 'Password must have a minimum of 6 characters and a maximum of 16'
     }
 
+
     class Meta:
         model = CustomUser
         fields = ['email', 'name', 'last_name', 'password']
@@ -46,8 +47,3 @@ class Task_todoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task_todo
         fields = ['title', 'description', 'owner', 'area', 'subcategory']
-
-class Short_Task_todoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task_todo
-        fields = ['title', 'owner']

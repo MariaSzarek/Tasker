@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .models import Task_todo, CustomUser, VerifyEmailToken
-from rest_framework import authentication, permissions
+from rest_framework import permissions
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
@@ -9,22 +9,20 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from .serializers import UserSerializer, RegisterSerializer, Task_todoSerializer, Short_Task_todoSerializer
+from .serializers import UserSerializer, RegisterSerializer, Task_todoSerializer
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
-
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import secrets
 import string
-from django.core.cache import cache
+
 from django.utils import timezone
 from datetime import timedelta
 
-from rest_framework.exceptions import ValidationError
 
 def create_verification_token(user):
     alphabet = string.ascii_letters + string.digits
@@ -44,18 +42,13 @@ def signup(request):
         user = CustomUser.objects.get(email=request.data['email'])
         user.set_password(request.data['password'])
         user.save()
-        # token = RefreshToken.for_user(user)
         token = create_verification_token(user)
-
-        # cache.set(f'verification_token_{token}', token, timeout=300)
         current_site = get_current_site(request).domain
         relativeLink = reverse('activation-confirmed')
-        # absurl = 'http://' + current_site + relativeLink + "?token="+str(token.access_token)
         absurl = 'http://' + current_site + relativeLink + "?token=" + token
         email_body = "Witaj " + user.name.capitalize() + ",\nDziękujemy za rejestrację w Taskerze!\nKliknij w poniższy link, aby potwierdzić swój adres e-mail i dokończyć proces rejestracji:\n" + absurl + "\nJeśli nie rejestrowałeś/-aś się w Taskerze, prosimy o zignorowanie tej wiadomości.\nDziękujemy,\nZespół Tasker"
         data = {'to_email':user.email, 'email_body':email_body, 'email_subject': 'Witaj w Taskerze'}
         Util.send_email(data)
-        # return Response({'token': str(token.access_token), 'user': serializer.data})
         return Response({'token': token, 'user': serializer.data})
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,30 +124,6 @@ class Full_Task_todoListView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
-
-
-class Short_Task_todoListView(generics.ListCreateAPIView):
-    """
-    skrócona lista tasków (widoczne tylko title + owner)
-    perform_create -> serializer Task_todoSerializer a nie Short_Task_todoSerializer,
-    bo Short przyjmie taska bez description a to bład, reszta pol ustawiona defoultowo
-    """
-    serializer_class = Short_Task_todoSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Task_todo.objects.all()
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Task_todo.objects.filter(owner=user)
-        return queryset
-
-    def perform_create(self, serializer):
-        full_serializer = Task_todoSerializer(data=self.request.data)
-        if full_serializer.is_valid():
-            full_serializer.save(owner=self.request.user)
-        else:
-            raise ValidationError(full_serializer.errors)
 
 
 class Task_todoItemView(generics.RetrieveUpdateDestroyAPIView):
